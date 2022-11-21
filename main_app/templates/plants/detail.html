@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Plant Details</h1>
+
+<div class="card">
+  <div class="card-content">
+    <span class="card-title">{{ plant.species }}</span>
+    <p>Hardiness Zone: {{ plant.hardiness }}</p>
+    <p>Description: {{ plant.description|linebreaks }}</p>
+  </div>
+  <div class="card-action">
+    <a href="{% url 'plants_update' plant.id %}">Edit</a>
+    <a href="{% url 'plants_delete' plant.id %}">Delete</a>
+  </div>
+  <div class="col s6">
+    <form action="{% url 'add_watering' plant.id %}" method="POST">
+        {% csrf_token %}
+        <!-- Render the inputs -->
+        {{ watering_form.as_p }}
+        <input type="submit" class="btn" value="Add Watering">
+      </form>
+    <table class="striped">
+      <thead>
+        <tr><th>Date</th><th>Watered</th></tr>
+      </thead>
+      <tbody>
+        {% for watering in plant.watering_set.all %}
+          <tr>
+            <td>{{watering.date}}</td>
+            <td>{{watering.get_watered_display}}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- This is all new markup to be added just above the <script> tag -->
+  <hr>
+  <div class="row">
+    <div class="col s6">
+      <h3>{{ plant.species }}'s Fertilizers</h3>
+      {% if plant.fertilizers.count %}
+        {% for fertilizer in plant.fertilizers.all %}
+          <div class="card">
+            <div class="card-content">
+              <span class="card-title">
+                 <span style="type: {{ fertilizer.type }}">{{ fertilizer.type }}</span> {{ fertilizer.name }}
+              </span>
+            </div>
+
+            <div class="card-action">
+              <form action="{% url 'unassoc_fertilizer' plant.id fertilizer.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn">Remove</button>
+              </form>
+
+          </div>
+        {% endfor %}
+      {% else %}
+        <h5>No Fertilizers 😿</h5>
+      {% endif %}
+    </div>
+    <!-- Available toys will come after this line -->
+    <div class="col s6">
+      <h3>Available Fertilizers</h3>
+      {% if fertilizers.count %}
+        {% for fertilizer in fertilizers.all %}
+          <div class="card">
+            <div class="card-content">
+              <span class="card-title">
+                <span style="type: {{ fertilizer.type }}">{{ fertilizer.type }}</span> {{ fertilizer.name }}
+              </span>
+            </div>
+            <div class="card-action">
+              <form action="{% url 'assoc_fertilizer' plant.id fertilizer.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn">Add</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <h5>{{plant.species}} Already Has All fetilizers Available</h5>
+      {% endif %}
+    </div>
+  </div>
+<script>
+const dateEl = document.getElementById('id_date');
+  // M is Materialize's global variable
+  M.Datepicker.init(dateEl, {
+    format: 'yyyy-mm-dd',
+    defaultDate: new Date(),
+    setDefaultDate: true,
+    autoClose: true
+  });
+  const selectEl = document.getElementById('id_watered');
+  M.FormSelect.init(selectEl);
+</script>
+{% endblock %}
